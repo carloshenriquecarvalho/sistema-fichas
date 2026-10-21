@@ -1,0 +1,10 @@
+{% extends "fichas/base.html" %}
+
+{% block conteudo %}
+    {% for ficha in fichas %}
+    <p>{{ ficha.nome }}</p>
+    <p>{{ ficha.valor }}</p>
+{% empty %}
+    <p>Não há fichas para este usuário</p>
+{% endfor %}
+{% endblock %}
