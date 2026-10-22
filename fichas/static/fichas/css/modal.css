@@ -1,0 +1,70 @@
+.modal {
+    box-sizing: border-box;
+    width: 90%;
+    max-width: 720px;
+    max-height: 85vh;
+    overflow-y: auto;
+
+    padding: 28px;
+    border: none;
+    border-radius: 16px;
+
+    background: #ffffff;
+    color: #1f2937;
+    font-family: system-ui, sans-serif;
+
+    box-shadow: 0 24px 80px rgb(15 23 42 / 25%);
+}
+
+.modal::backdrop {
+    background: rgb(15 23 42 / 55%);
+}
+
+.campos {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.campo {
+    min-width: 0;
+}
+
+.campo label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.campo input:not([type="checkbox"]),
+.campo select,
+.campo textarea {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font: inherit;
+}
+
+.campo--largo {
+    grid-column: 1 / -1;
+}
+
+.campo textarea {
+    height: 80px;
+    max-height: 140px;
+    resize: vertical;
+    overflow-y: auto;
+}
+
+@media (max-width: 600px) {
+    .campos {
+        grid-template-columns: 1fr;
+    }
+}
+
+[data-cnpj][hidden] {
+    display: none;
+}

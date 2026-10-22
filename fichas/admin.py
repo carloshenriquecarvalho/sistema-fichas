@@ -1,3 +1,10 @@
 from django.contrib import admin
+from .models import Etapa
 
-# Register your models here.
+
+class EtapaAdmin(admin.ModelAdmin):
+    list_display = ("id", "nome", "ordem")
+    ordering = ("ordem", "id")
+
+
+admin.site.register(Etapa, EtapaAdmin)

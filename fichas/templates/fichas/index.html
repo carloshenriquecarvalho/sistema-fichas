@@ -1,10 +1,112 @@
-{% extends "fichas/base.html" %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ titulo }}</title>
 
-{% block conteudo %}
-    {% for ficha in fichas %}
-    <p>{{ ficha.nome }}</p>
-    <p>{{ ficha.valor }}</p>
+    <link rel="stylesheet" href="{% static 'fichas/css/modal.css' %}">
+</head>
+<body>
+<dialog id="modal-ficha" class="modal" aria-labelledby="titulo-modal-ficha">
+    <h2 id="titulo-modal-ficha">Nova ficha</h2>
+    <form method="POST" action="{% url 'fichas_index' %}">
+        {% csrf_token %}
+        {{ formulario.non_field_errors }}
+
+        <div class="campos">
+            {% for campo in formulario %}
+                <div
+                    class="campo{% if campo.name == 'cliente' or campo.name == 'endereco' %} campo--largo{% endif %}"
+                    {% if campo.name == 'cnpj' or campo.name == 'razao_social' or campo.name == 'data_abertura' %}data-cnpj{% endif %}
+                >
+                    {{ campo.label_tag }}
+                    {{ campo }}
+                    {{ campo.errors }}
+                </div>
+            {% endfor %}
+        </div>
+        <button type="submit">Enviar</button>
+        <button type="button" id="fechar-ficha">Cancelar</button>
+    </form>
+</dialog>
+
+<button type="button" id="abrir-ficha">Nova ficha</button>
+
+<button type="button" id="abrir-etapa">Nova etapa</button>
+
+<dialog id="modal-etapa" class="modal" aria-labelledby="titulo-modal-etapa">
+    <h2 id="titulo-modal-etapa">Nova etapa</h2>
+    <form method="post" action="{% url 'etapa_criar' %}">
+        {% csrf_token %}
+        {{ formulario_etapa.as_p }}
+        <button type="submit">Enviar</button>
+        <button type="button" id="fechar-etapa">Cancelar</button>
+    </form>
+</dialog>
+
+<script>
+    const modalFicha = document.getElementById("modal-ficha");
+    const botaoAbrir = document.getElementById("abrir-ficha");
+    const botaoCancelar = document.getElementById("fechar-ficha")
+
+    botaoAbrir.addEventListener("click", function () {
+        modalFicha.showModal();
+    });
+
+    botaoCancelar.addEventListener("click", function () {
+        modalFicha.close()
+    })
+    {% if formulario.errors %}
+        modalFicha.showModal();
+    {% endif %}
+
+    const modalEtapa = document.getElementById("modal-etapa");
+    const botaoAbrirEtapa = document.getElementById("abrir-etapa");
+    const botaoCancelarEtapa = document.getElementById("fechar-etapa")
+
+    botaoAbrirEtapa.addEventListener("click", function () {
+        modalEtapa.showModal();
+    });
+
+    botaoCancelarEtapa.addEventListener("click", function () {
+        modalEtapa.close()
+    })
+    {% if formulario_etapa.errors %}
+        modalEtapa.showModal();
+    {% endif %}
+
+    const usarCnpj = modalFicha.querySelector('[name="usar_cnpj"]');
+    const gruposCnpj = modalFicha.querySelectorAll("[data-cnpj]");
+
+    function atualizarCamposCnpj() {
+        const ativo = usarCnpj.checked;
+
+        gruposCnpj.forEach(function (grupo) {
+            grupo.hidden = !ativo;
+
+            const campo = grupo.querySelector("input, select, textarea");
+            campo.disabled = !ativo;
+            campo.required = ativo;
+        });
+    }
+
+    usarCnpj.addEventListener("change", atualizarCamposCnpj);
+    atualizarCamposCnpj();
+</script>
+
+{% for etapa in etapas %}
+    <h2>Etapa: {{ etapa.nome }}</h2>
+
+    {% for ficha in etapa.ficha_set.all %}
+        <p>{{ ficha.cliente }}</p>
+    {% empty %}
+        <p>Nenhuma ficha nesta etapa.</p>
+    {% endfor %}
+
 {% empty %}
-    <p>Não há fichas para este usuário</p>
+    <p>Nenhuma etapa cadastrada.</p>
 {% endfor %}
-{% endblock %}
+</body>
+</html>

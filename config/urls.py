@@ -20,4 +20,5 @@ from fichas import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("fichas/", views.index, name="fichas_index"),
+    path("fichas/etapas/criar/", views.criar_etapa, name="etapa_criar"),
 ]
