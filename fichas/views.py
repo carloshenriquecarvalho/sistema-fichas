@@ -18,6 +18,9 @@ from .models import AnexoFicha
 
 from .forms import EtapaForm, FichaForm
 from .models import Etapa, EventoFicha, Ficha
+from .models import RegistroExclusaoFicha
+
+logger = logging.getLogger(__name__)
 
 
 def fichas_visiveis(usuario):
@@ -325,3 +328,80 @@ def anexo_baixar(request, ficha_id, anexo_id):
     resposta["Cache-Control"] = "private, no-store"
 
     return resposta
+
+@login_required(login_url="login")
+@permission_required("fichas.delete_ficha", raise_exception=True)
+@require_http_methods(["GET", "POST"])
+def ficha_excluir(request, ficha_id):
+    if request.method == "GET":
+        ficha = get_object_or_404(
+            fichas_visiveis(request.user),
+            pk=ficha_id,
+        )
+        return render(request, "fichas/ficha_excluir.html", {
+            "titulo": f"Excluir ficha #{ficha.pk}",
+            "ficha": ficha,
+            "quantidade_anexos": ficha.anexos.count(),
+        })
+
+    try:
+        with transaction.atomic():
+            ficha = get_object_or_404(
+                fichas_visiveis(request.user).select_for_update(),
+                pk=ficha_id,
+            )
+
+            # Guardamos os caminhos antes de remover os registros.
+            arquivos = [
+                (anexo.arquivo.storage, anexo.arquivo.name)
+                for anexo in ficha.anexos.all()
+                if anexo.arquivo.name
+            ]
+
+            RegistroExclusaoFicha.objects.create(
+                ficha_id_original=ficha.pk,
+                autor=request.user,
+            )
+
+            # Estes registros usam PROTECT e precisam sair primeiro.
+            ficha.anexos.all().delete()
+            ficha.eventos.all().delete()
+            ficha.delete()
+
+            def remover_arquivos():
+                falhas = 0
+
+                for armazenamento, nome in arquivos:
+                    try:
+                        armazenamento.delete(nome)
+                    except Exception:
+                        falhas += 1
+                        logger.exception(
+                            "Falha ao excluir o arquivo %r da ficha #%s.",
+                            nome, ficha_id,
+                        )
+
+                if falhas:
+                    messages.warning(
+                        request,
+                        "A ficha foi excluída do banco, mas não foi possível "
+                        f"apagar {falhas} arquivo(s). "
+                        "Verifique os logs do servidor.",
+                    )
+                else:
+                    messages.success(
+                        request,
+                        f"Ficha #{ficha_id} e seus anexos excluídos.",
+                    )
+
+            transaction.on_commit(remover_arquivos)
+
+    except ProtectedError:
+        messages.error(
+            request,
+            "A exclusão foi cancelada: ainda existe outro registro "
+            "protegido vinculado a esta ficha.",
+        )
+        return redirect("ficha_detalhe", ficha_id=ficha_id)
+
+    return redirect("fichas_index")

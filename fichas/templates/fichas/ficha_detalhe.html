@@ -1,7 +1,14 @@
 {% extends "fichas/base.html" %}
 {% block content %}
 <a class="voltar" href="{% url 'fichas_index' %}">← Voltar ao quadro</a>
-<section class="titulo-pagina"><div><p class="sobretitulo">FICHA #{{ ficha.pk }}</p><h1>{{ ficha.cliente }}</h1><p class="subtitulo">{{ ficha.equipamento }} · Vendedor: {{ ficha.vendedor.get_full_name|default:ficha.vendedor.get_username }}</p></div><div class="acoes"><span class="etiqueta">{{ ficha.etapa.nome }}</span>{% if perms.fichas.change_ficha %}<a class="botao botao--primario" href="{% url 'ficha_editar' ficha.pk %}">Editar ficha</a>{% endif %}</div></section>
+<section class="titulo-pagina"><div><p class="sobretitulo">FICHA #{{ ficha.pk }}</p><h1>{{ ficha.cliente }}</h1><p class="subtitulo">{{ ficha.equipamento }} · Vendedor: {{ ficha.vendedor.get_full_name|default:ficha.vendedor.get_username }}</p></div><div class="acoes"><span class="etiqueta">{{ ficha.etapa.nome }}</span>{% if perms.fichas.change_ficha %}<a class="botao botao--primario" href="{% url 'ficha_editar' ficha.pk %}">Editar ficha</a>{% endif %}</div>
+{% if perms.fichas.delete_ficha %}
+    <a class="botao botao--perigo"
+       href="{% url 'ficha_excluir' ficha.pk %}">
+        Excluir ficha
+    </a>
+{% endif %}
+</section>
 <div class="detalhe-layout">
     <section class="painel"><h2>Dados da ficha</h2><dl class="dados-ficha">{% for rotulo, valor in campos %}<div><dt>{{ rotulo|capfirst }}</dt><dd>{{ valor|default_if_none:"—"|default:"—"|linebreaksbr }}</dd></div>{% endfor %}</dl></section>
     <aside class="detalhe-lateral">

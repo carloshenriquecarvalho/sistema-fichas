@@ -1,7 +1,6 @@
-from django.conf import settings
 from django.core.validators import FileExtensionValidator
+from django.conf import settings
 from django.db import models
-
 
 class Etapa(models.Model):
     nome = models.CharField(max_length=50)
@@ -95,3 +94,14 @@ class AnexoFicha(models.Model):
 
     def __str__(self):
         return self.nome_original
+
+class RegistroExclusaoFicha(models.Model):
+    ficha_id_original = models.PositiveBigIntegerField()
+
+    autor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="exclusoes_de_fichas",
+    )
+
+    excluida_em = models.DateTimeField(auto_now_add=True)

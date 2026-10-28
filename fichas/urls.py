@@ -26,4 +26,9 @@ urlpatterns = [
         views.anexo_baixar,
         name="anexo_baixar",
     ),
+    path(
+        "<int:ficha_id>/excluir/",
+        views.ficha_excluir,
+        name="ficha_excluir",
+    ),
 ]

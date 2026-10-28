@@ -1,0 +1,29 @@
+{% extends "fichas/base.html" %}
+
+{% block content %}
+<section class="painel">
+    <h1>Excluir ficha #{{ ficha.pk }}</h1>
+
+    <p>Cliente: <strong>{{ ficha.cliente }}</strong></p>
+
+    <p>
+        A ficha, seu histórico e {{ quantidade_anexos }} anexo(s)
+        serão excluídos permanentemente.
+    </p>
+
+    <form method="post" action="{% url 'ficha_excluir' ficha.pk %}">
+        {% csrf_token %}
+
+        <div class="acoes">
+            <a class="botao botao--secundario"
+               href="{% url 'ficha_detalhe' ficha.pk %}">
+                Cancelar
+            </a>
+
+            <button class="botao botao--perigo" type="submit">
+                Excluir definitivamente
+            </button>
+        </div>
+    </form>
+</section>
+{% endblock %}
