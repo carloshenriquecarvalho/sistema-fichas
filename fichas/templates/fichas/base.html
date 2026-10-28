@@ -1,0 +1,39 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <title>{{ titulo|default:"Fichas" }} · Auren</title>
+    <link rel="stylesheet" href="{% static 'fichas/css/modal.css' %}">
+    <script src="{% static 'fichas/js/fichas.js' %}" defer></script>
+</head>
+<body>
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+<aside class="sidebar">
+    <a class="marca" href="{% url 'fichas_index' %}" aria-label="Auren, início">
+        <span class="marca-simbolo" aria-hidden="true">a</span>
+        <span>auren<span class="marca-legenda">ACOMPANHAMENTO DE FICHAS</span></span>
+    </a>
+    <span class="nav-titulo">ÁREA DE TRABALHO</span>
+    <nav aria-label="Navegação principal">
+        <a class="nav-link ativo" href="{% url 'fichas_index' %}"><span aria-hidden="true">▦</span> Fichas</a>
+        {% if user.is_staff %}<a class="nav-link" href="{% url 'admin:index' %}"><span aria-hidden="true">⚙</span> Administração</a>{% endif %}
+    </nav>
+    <div class="sidebar-rodape">
+        <span class="avatar" aria-hidden="true">{{ user.get_username|first|upper }}</span>
+        <div><strong>{{ user.get_full_name|default:user.get_username }}</strong><span>Conta conectada</span></div>
+        <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="sair" type="submit">Sair</button></form>
+    </div>
+</aside>
+<main class="principal" id="conteudo">
+    <header class="cabecalho"><span>ÁREA COMERCIAL <span aria-hidden="true">/</span> <strong>Fichas</strong></span><span class="conectado"><i></i> Acesso autenticado</span></header>
+    <div class="pagina">
+        {% if messages %}<div class="avisos" aria-live="polite">{% for message in messages %}<p class="aviso aviso--{{ message.tags }}">{{ message }}</p>{% endfor %}</div>{% endif %}
+        {% block content %}{% endblock %}
+    </div>
+</main>
+<div id="status-quadro" class="status-flutuante" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

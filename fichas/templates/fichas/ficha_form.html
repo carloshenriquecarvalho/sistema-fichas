@@ -1,0 +1,6 @@
+{% extends "fichas/base.html" %}
+{% block content %}
+<a class="voltar" href="{% url 'ficha_detalhe' ficha.pk %}">← Voltar à ficha</a>
+<section class="titulo-pagina"><div><p class="sobretitulo">FICHA #{{ ficha.pk }}</p><h1>Editar ficha</h1><p class="subtitulo">A alteração será registrada com seu usuário.</p></div></section>
+<section class="painel painel-form"><form method="post" action="{% url 'ficha_editar' ficha.pk %}">{% csrf_token %}{% include "fichas/componentes/campos.html" %}<div class="rodape-form"><a class="botao botao--secundario" href="{% url 'ficha_detalhe' ficha.pk %}">Cancelar</a><button class="botao botao--primario" type="submit">Salvar alterações</button></div></form></section>
+{% endblock %}

@@ -1,0 +1,5 @@
+{% extends "fichas/base.html" %}
+{% block content %}
+<a class="voltar" href="{% url 'fichas_index' %}">← Voltar ao quadro</a>
+<section class="painel confirmacao"><p class="sobretitulo">CONFIGURAÇÃO DO KANBAN</p><h1>Excluir “{{ etapa.nome }}”?</h1><p>Uma etapa só pode ser excluída quando não contém fichas. O histórico das movimentações será mantido.</p><form method="post" action="{% url 'etapa_excluir' etapa.pk %}">{% csrf_token %}<div class="rodape-form"><a class="botao botao--secundario" href="{% url 'fichas_index' %}">Cancelar</a><button class="botao botao--perigo" type="submit">Excluir etapa</button></div></form></section>
+{% endblock %}

@@ -1,112 +1,57 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ titulo }}</title>
+{% extends "fichas/base.html" %}
+{% block content %}
+<section class="titulo-pagina">
+    <div><p class="sobretitulo">ACOMPANHAMENTO COMERCIAL</p><h1>Suas oportunidades,<br class="quebra-mobile"> em movimento<span>.</span></h1><p class="subtitulo">{% if pode_ver_todas %}Acompanhe as fichas de toda a equipe.{% else %}Acompanhe suas fichas e cada etapa da análise.{% endif %}</p></div>
+    <div class="acoes">
+        {% if perms.fichas.add_etapa %}<button class="botao botao--secundario" type="button" data-open="modal-etapa">+ Nova etapa</button>{% endif %}
+        {% if perms.fichas.add_ficha %}<button class="botao botao--primario" type="button" data-open="modal-ficha">+ Nova ficha</button>{% endif %}
+    </div>
+</section>
+<section class="indicadores" aria-label="Resumo das fichas exibidas">
+    <div class="indicador"><span class="icone-indicador" aria-hidden="true">▤</span><div><p>Fichas{% if busca %} encontradas{% endif %}</p><strong>{{ quantidade }}</strong></div></div>
+    <div class="indicador"><span class="icone-indicador" aria-hidden="true">R$</span><div><p>Valor total{% if busca %} da busca{% endif %}</p><strong>R$ {{ valor_total|floatformat:"2g" }}</strong></div></div>
+    <div class="indicador"><span class="icone-indicador" aria-hidden="true">▥</span><div><p>Etapas do processo</p><strong>{{ etapas|length }}</strong></div></div>
+</section>
+<section class="area-quadro" aria-labelledby="titulo-quadro">
+    <div class="barra-quadro">
+        <div><h2 id="titulo-quadro">Quadro de fichas</h2><p>{% if perms.fichas.mover_ficha %}Arraste um cartão para mudar a etapa ou use o botão Mover.{% else %}Abra um cartão para consultar os dados e o histórico.{% endif %}</p></div>
+        <form class="busca" method="get" role="search"><label class="sr-only" for="busca">Buscar cliente, equipamento ou número da ficha</label><input id="busca" type="search" name="q" value="{{ busca }}" maxlength="100" placeholder="Cliente, equipamento ou nº"><button type="submit" class="botao-buscar">Buscar</button>{% if busca %}<a href="{% url 'fichas_index' %}">Limpar</a>{% endif %}</form>
+    </div>
+    <div class="kanban" data-quadro>
+        {% for etapa in etapas %}
+        <section class="coluna" data-etapa-id="{{ etapa.pk }}" aria-labelledby="etapa-{{ etapa.pk }}">
+            <header class="coluna-cabecalho"><div class="coluna-titulo"><span class="ponto-etapa" aria-hidden="true"></span><h3 id="etapa-{{ etapa.pk }}">{{ etapa.nome }}</h3><span class="contador">{{ etapa.fichas_do_quadro|length }}</span></div><span class="total-coluna">R$ {{ etapa.valor_do_quadro|floatformat:"2g" }}</span>
+                {% if perms.fichas.change_etapa or perms.fichas.delete_etapa %}<div class="acoes-etapa">{% if perms.fichas.change_etapa %}<a href="{% url 'etapa_editar' etapa.pk %}">Editar etapa</a>{% endif %}{% if perms.fichas.delete_etapa %}<a href="{% url 'etapa_excluir' etapa.pk %}">Excluir</a>{% endif %}</div>{% endif %}
+            </header>
+            <div class="coluna-cartoes">
+                {% for ficha in etapa.fichas_do_quadro %}
+                <article class="cartao" data-ficha-id="{{ ficha.pk }}" data-etapa-origem="{{ etapa.pk }}" data-mover-url="{% url 'ficha_mover' ficha.pk %}" {% if perms.fichas.mover_ficha %}draggable="true"{% endif %}>
+                    <div class="cartao-topo"><span class="numero-ficha">FICHA #{{ ficha.pk }}</span>{% if perms.fichas.mover_ficha %}<span class="alca" aria-hidden="true">⠿</span>{% endif %}</div>
+                    <h4><a href="{% url 'ficha_detalhe' ficha.pk %}">{{ ficha.cliente }}</a></h4>
+                    <p class="equipamento">{{ ficha.equipamento }}</p>
+                    <p class="valor-ficha">R$ {{ ficha.valor|floatformat:"2g" }}</p>
+                    <div class="cartao-rodape"><span title="Vendedor">{{ ficha.vendedor.get_full_name|default:ficha.vendedor.get_username }}</span><a href="{% url 'ficha_detalhe' ficha.pk %}">Abrir <span aria-hidden="true">↗</span></a></div>
+                    {% if perms.fichas.mover_ficha %}<form class="mover-form" method="post" action="{% url 'ficha_mover' ficha.pk %}">{% csrf_token %}<input type="hidden" name="etapa_origem" value="{{ etapa.pk }}"><label class="sr-only" for="mover-{{ ficha.pk }}">Destino da ficha {{ ficha.pk }}</label><select name="etapa" id="mover-{{ ficha.pk }}">{% for destino in etapas %}<option value="{{ destino.pk }}" {% if destino.pk == etapa.pk %}selected{% endif %}>{{ destino.nome }}</option>{% endfor %}</select><button type="submit">Mover</button></form>{% endif %}
+                </article>
+                {% empty %}<div class="coluna-vazia"><span aria-hidden="true">＋</span><p>{% if busca %}Nenhum resultado nesta etapa.{% else %}Nenhuma ficha nesta etapa.{% endif %}</p></div>{% endfor %}
+            </div>
+        </section>
+        {% empty %}<div class="estado-vazio"><span class="estado-vazio-icone" aria-hidden="true">▦</span><h3>Vamos organizar seu processo?</h3><p>Cadastre a primeira etapa para começar a receber fichas.</p>{% if perms.fichas.add_etapa %}<button class="botao botao--primario" type="button" data-open="modal-etapa">Criar primeira etapa</button>{% else %}<p>Peça ao administrador ou ao setor de Crédito para cadastrar as etapas.</p>{% endif %}</div>{% endfor %}
+    </div>
+</section>
 
-    <link rel="stylesheet" href="{% static 'fichas/css/modal.css' %}">
-</head>
-<body>
-<dialog id="modal-ficha" class="modal" aria-labelledby="titulo-modal-ficha">
-    <h2 id="titulo-modal-ficha">Nova ficha</h2>
-    <form method="POST" action="{% url 'fichas_index' %}">
-        {% csrf_token %}
-        {{ formulario.non_field_errors }}
-
-        <div class="campos">
-            {% for campo in formulario %}
-                <div
-                    class="campo{% if campo.name == 'cliente' or campo.name == 'endereco' %} campo--largo{% endif %}"
-                    {% if campo.name == 'cnpj' or campo.name == 'razao_social' or campo.name == 'data_abertura' %}data-cnpj{% endif %}
-                >
-                    {{ campo.label_tag }}
-                    {{ campo }}
-                    {{ campo.errors }}
-                </div>
-            {% endfor %}
-        </div>
-        <button type="submit">Enviar</button>
-        <button type="button" id="fechar-ficha">Cancelar</button>
-    </form>
+{% if perms.fichas.add_ficha %}
+<dialog id="modal-ficha" class="modal" aria-labelledby="titulo-modal-ficha" {% if formulario.errors %}data-autoopen{% endif %}>
+    <div class="modal-cabecalho"><div><p class="sobretitulo">NOVA OPORTUNIDADE</p><h2 id="titulo-modal-ficha">Cadastrar ficha</h2></div><button class="fechar-modal" type="button" data-close aria-label="Fechar formulário">×</button></div>
+    <p class="texto-apoio">A ficha será vinculada à sua conta e à primeira etapa do quadro.</p>
+    <form method="post" action="{% url 'fichas_index' %}">{% csrf_token %}{% include "fichas/componentes/campos.html" %}<div class="rodape-form"><button type="button" class="botao botao--secundario" data-close>Cancelar</button><button class="botao botao--primario" type="submit">Cadastrar ficha</button></div></form>
 </dialog>
-
-<button type="button" id="abrir-ficha">Nova ficha</button>
-
-<button type="button" id="abrir-etapa">Nova etapa</button>
-
-<dialog id="modal-etapa" class="modal" aria-labelledby="titulo-modal-etapa">
-    <h2 id="titulo-modal-etapa">Nova etapa</h2>
-    <form method="post" action="{% url 'etapa_criar' %}">
-        {% csrf_token %}
-        {{ formulario_etapa.as_p }}
-        <button type="submit">Enviar</button>
-        <button type="button" id="fechar-etapa">Cancelar</button>
-    </form>
+{% endif %}
+{% if perms.fichas.add_etapa %}
+<dialog id="modal-etapa" class="modal modal--pequeno" aria-labelledby="titulo-modal-etapa" {% if formulario_etapa.errors %}data-autoopen{% endif %}>
+    <div class="modal-cabecalho"><div><p class="sobretitulo">ORGANIZE O FLUXO</p><h2 id="titulo-modal-etapa">Nova etapa</h2></div><button class="fechar-modal" type="button" data-close aria-label="Fechar formulário">×</button></div>
+    <p class="texto-apoio">A posição define a ordem das colunas, da esquerda para a direita.</p>
+    <form method="post" action="{% url 'etapa_criar' %}">{% csrf_token %}{{ formulario_etapa.non_field_errors }}{% for campo in formulario_etapa %}<div class="campo campo-etapa">{{ campo.label_tag }}{{ campo }}{{ campo.errors }}</div>{% endfor %}<div class="rodape-form"><button class="botao botao--secundario" type="button" data-close>Cancelar</button><button class="botao botao--primario" type="submit">Criar etapa</button></div></form>
 </dialog>
-
-<script>
-    const modalFicha = document.getElementById("modal-ficha");
-    const botaoAbrir = document.getElementById("abrir-ficha");
-    const botaoCancelar = document.getElementById("fechar-ficha")
-
-    botaoAbrir.addEventListener("click", function () {
-        modalFicha.showModal();
-    });
-
-    botaoCancelar.addEventListener("click", function () {
-        modalFicha.close()
-    })
-    {% if formulario.errors %}
-        modalFicha.showModal();
-    {% endif %}
-
-    const modalEtapa = document.getElementById("modal-etapa");
-    const botaoAbrirEtapa = document.getElementById("abrir-etapa");
-    const botaoCancelarEtapa = document.getElementById("fechar-etapa")
-
-    botaoAbrirEtapa.addEventListener("click", function () {
-        modalEtapa.showModal();
-    });
-
-    botaoCancelarEtapa.addEventListener("click", function () {
-        modalEtapa.close()
-    })
-    {% if formulario_etapa.errors %}
-        modalEtapa.showModal();
-    {% endif %}
-
-    const usarCnpj = modalFicha.querySelector('[name="usar_cnpj"]');
-    const gruposCnpj = modalFicha.querySelectorAll("[data-cnpj]");
-
-    function atualizarCamposCnpj() {
-        const ativo = usarCnpj.checked;
-
-        gruposCnpj.forEach(function (grupo) {
-            grupo.hidden = !ativo;
-
-            const campo = grupo.querySelector("input, select, textarea");
-            campo.disabled = !ativo;
-            campo.required = ativo;
-        });
-    }
-
-    usarCnpj.addEventListener("change", atualizarCamposCnpj);
-    atualizarCamposCnpj();
-</script>
-
-{% for etapa in etapas %}
-    <h2>Etapa: {{ etapa.nome }}</h2>
-
-    {% for ficha in etapa.ficha_set.all %}
-        <p>{{ ficha.cliente }}</p>
-    {% empty %}
-        <p>Nenhuma ficha nesta etapa.</p>
-    {% endfor %}
-
-{% empty %}
-    <p>Nenhuma etapa cadastrada.</p>
-{% endfor %}
-</body>
-</html>
+{% endif %}
+{% endblock %}

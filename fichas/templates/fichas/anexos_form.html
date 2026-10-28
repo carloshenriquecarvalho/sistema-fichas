@@ -1,0 +1,31 @@
+{% extends "fichas/base.html" %}
+
+{% block content %}
+<a class="voltar" href="{% url 'ficha_detalhe' ficha.pk %}">
+    ← Voltar à ficha
+</a>
+
+<section class="painel painel-form">
+    <h2>Anexar PDFs — {{ ficha.cliente }}</h2>
+
+    <form
+        method="post"
+        action="{% url 'ficha_anexar' ficha.pk %}"
+        enctype="multipart/form-data"
+    >
+        {% csrf_token %}
+        {{ formulario_anexos.as_p }}
+
+        <div class="rodape-form">
+            <a class="botao botao--secundario"
+               href="{% url 'ficha_detalhe' ficha.pk %}">
+                Cancelar
+            </a>
+
+            <button class="botao botao--primario" type="submit">
+                Enviar PDFs
+            </button>
+        </div>
+    </form>
+</section>
+{% endblock %}

@@ -1,0 +1,15 @@
+{{ formulario.non_field_errors }}
+<div class="campos" data-form-ficha>
+    {% for campo in formulario %}
+    <div class="campo{% if campo.name == 'cliente' or campo.name == 'endereco' %} campo--largo{% endif %}{% if campo.field.widget.input_type == 'checkbox' %} campo--checkbox{% endif %}"
+         {% if campo.name == 'cnpj' or campo.name == 'razao_social' or campo.name == 'data_abertura' %}data-cnpj{% if not formulario.usar_cnpj.value %} hidden{% endif %}{% endif %}>
+        {% if campo.field.widget.input_type == 'checkbox' %}
+            {{ campo }} {{ campo.label_tag }}
+        {% else %}
+            {{ campo.label_tag }}{{ campo }}
+        {% endif %}
+        {% if campo.help_text %}<span class="ajuda" id="{{ campo.auto_id }}_helptext">{{ campo.help_text }}</span>{% endif %}
+        {{ campo.errors }}
+    </div>
+    {% endfor %}
+</div>

@@ -1,0 +1,42 @@
+{% extends "fichas/base.html" %}
+{% block content %}
+<a class="voltar" href="{% url 'fichas_index' %}">← Voltar ao quadro</a>
+<section class="titulo-pagina"><div><p class="sobretitulo">FICHA #{{ ficha.pk }}</p><h1>{{ ficha.cliente }}</h1><p class="subtitulo">{{ ficha.equipamento }} · Vendedor: {{ ficha.vendedor.get_full_name|default:ficha.vendedor.get_username }}</p></div><div class="acoes"><span class="etiqueta">{{ ficha.etapa.nome }}</span>{% if perms.fichas.change_ficha %}<a class="botao botao--primario" href="{% url 'ficha_editar' ficha.pk %}">Editar ficha</a>{% endif %}</div></section>
+<div class="detalhe-layout">
+    <section class="painel"><h2>Dados da ficha</h2><dl class="dados-ficha">{% for rotulo, valor in campos %}<div><dt>{{ rotulo|capfirst }}</dt><dd>{{ valor|default_if_none:"—"|default:"—"|linebreaksbr }}</dd></div>{% endfor %}</dl></section>
+    <aside class="detalhe-lateral">
+        {% if perms.fichas.mover_ficha %}<section class="painel"><h2>Alterar etapa</h2><form method="post" action="{% url 'ficha_mover' ficha.pk %}">{% csrf_token %}<input type="hidden" name="etapa_origem" value="{{ ficha.etapa_id }}"><div class="campo"><label for="destino-etapa">Etapa de destino</label><select name="etapa" id="destino-etapa">{% for etapa in etapas %}<option value="{{ etapa.pk }}" {% if etapa.pk == ficha.etapa_id %}selected{% endif %}>{{ etapa.nome }}</option>{% endfor %}</select></div><button class="botao botao--primario botao--inteiro" type="submit">Mover ficha</button></form></section>{% endif %}
+        <section class="painel"><h2>Histórico</h2><p class="texto-apoio">Até 100 registros recentes.</p><ol class="historico">{% for evento in eventos %}<li><strong>{{ evento.get_acao_display }}</strong><p>{{ evento.autor.get_full_name|default:evento.autor.get_username }}</p>{% if evento.etapa_nova %}<p>{% if evento.etapa_anterior %}{{ evento.etapa_anterior }} → {% endif %}{{ evento.etapa_nova }}</p>{% endif %}{% if evento.alteracoes %}<details><summary>Ver alterações</summary><dl class="alteracoes">{% for campo, valores in evento.alteracoes.items %}<dt>{{ valores.rotulo|default:campo|capfirst }}</dt><dd><del>{{ valores.antes|default:"Vazio" }}</del><span> → {{ valores.depois|default:"Vazio" }}</span></dd>{% endfor %}</dl></details>{% endif %}<time>{{ evento.criado_em|date:"d/m/Y H:i" }}</time></li>{% empty %}<li>Ficha anterior à instalação do histórico. As próximas alterações serão registradas.</li>{% endfor %}</ol></section>
+    </aside>
+</div>
+<section class="painel">
+    <h2>Documentos anexados</h2>
+
+    {% if perms.fichas.change_ficha %}
+        <a class="botao botao--primario"
+           href="{% url 'ficha_anexar' ficha.pk %}">
+            Anexar PDFs
+        </a>
+    {% endif %}
+
+    <ul>
+    {% for anexo in anexos %}
+        <li>
+            <strong>{{ anexo.nome_original }}</strong>
+
+            — {{ anexo.enviado_por.get_username }}
+            — {{ anexo.enviado_em|date:"d/m/Y H:i" }}
+
+            <a
+                class="botao botao--secundario"
+                href="{% url 'anexo_baixar' ficha.pk anexo.pk %}"
+            >
+                Baixar
+            </a>
+        </li>
+    {% empty %}
+        <li>Nenhum documento anexado.</li>
+    {% endfor %}
+</ul>
+</section>
+{% endblock %}

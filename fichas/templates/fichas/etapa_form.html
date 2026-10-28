@@ -1,0 +1,6 @@
+{% extends "fichas/base.html" %}
+{% block content %}
+<a class="voltar" href="{% url 'fichas_index' %}">← Voltar ao quadro</a>
+<section class="titulo-pagina"><div><p class="sobretitulo">CONFIGURAÇÃO DO KANBAN</p><h1>Editar etapa</h1><p class="subtitulo">Mudar a posição reorganiza as colunas e mantém as fichas vinculadas à etapa.</p></div></section>
+<section class="painel painel-form"><form method="post" action="{% url 'etapa_editar' etapa.pk %}">{% csrf_token %}{{ formulario_etapa.non_field_errors }}{% for campo in formulario_etapa %}<div class="campo campo-etapa">{{ campo.label_tag }}{{ campo }}{{ campo.errors }}</div>{% endfor %}<div class="rodape-form"><a class="botao botao--secundario" href="{% url 'fichas_index' %}">Cancelar</a><button class="botao botao--primario" type="submit">Salvar etapa</button></div></form></section>
+{% endblock %}
